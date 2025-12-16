@@ -34,3 +34,59 @@ License: [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]
 PQC Algorithm: [![PQC: Kyber-768](https://img.shields.io/badge/PQC-Kyber--768-333333)]
 
 Status: [![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-blue)]
+
+---
+
+### **✅ Phase 1 Validation (The Engine)**
+
+To validate that Phase 1 (Core Crypto & Stego Engine) is working correctly, use the provided CLI tool in `core/`.
+
+**Prerequisites:**
+- Rust installed (`cargo`).
+
+**Steps:**
+
+1.  **Build the Core:**
+    ```bash
+    cd core
+    cargo build --release
+    ```
+
+2.  **Run the Validation Flow:**
+    You can simulate a full message exchange between Alice and Bob.
+
+    *   **Step 1: Alice generates her Identity (Kyber-768)**
+        ```bash
+        cargo run --bin cli -- keygen --out alice_identity
+        # Outputs: alice_identity.pub, alice_identity.sec
+        ```
+
+    *   **Step 2: Bob encapsulates a Shared Secret for Alice**
+        ```bash
+        cargo run --bin cli -- encap --pub-key alice_identity.pub --out bob_secret
+        # Outputs: bob_secret.shared (Secret), bob_secret.cipher (Ciphertext to send to Alice)
+        ```
+
+    *   **Step 3: Alice decapsulates to get the same Shared Secret**
+        ```bash
+        cargo run --bin cli -- decap --sec-key alice_identity.sec --cipher bob_secret.cipher --out alice_secret
+        # Outputs: alice_secret.shared (Should match bob_secret.shared)
+        ```
+
+    *   **Step 4: Bob sends a Covert Message**
+        Bob embeds a message into an image using the Shared Secret.
+        ```bash
+        cargo run --bin cli -- embed --image input.png --secret bob_secret.shared --message "Hello Quantum World" --out stego.png
+        ```
+
+    *   **Step 5: Alice receives and reads the Covert Message**
+        Alice uses her copy of the Shared Secret to extract the message.
+        ```bash
+        cargo run --bin cli -- extract --image stego.png --secret alice_secret.shared
+        # Output: "Hello Quantum World"
+        ```
+
+3.  **Run Unit Tests:**
+    ```bash
+    cargo test
+    ```
